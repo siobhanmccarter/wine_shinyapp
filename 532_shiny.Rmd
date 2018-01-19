@@ -57,7 +57,7 @@ test <- left_join(world,w_count)
 
 
 map +
-  geom_polygon(data = highlighted, aes(x = long, y = lat), fill = NA, colour = "black")
+  geom_polygon(data = highlighted, aes(x = long, y = lat,group = group), fill = NA, colour = "black")
 ```
 
 ```{r}

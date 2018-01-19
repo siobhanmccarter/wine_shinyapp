@@ -10,6 +10,7 @@
 library(shiny)
 library(tidyverse)
 library(leaflet)
+library(DT)
 
 wine <- read_csv("data/winemag-data-130k-v2.csv")
 wine <- subset(wine, select = -X1 )
@@ -28,8 +29,8 @@ w_geo <- left_join(world,w_count)
 
 list <- sort(unique(wine$country))
 list2 <- sort(unique(wine$variety))
-
-ui <- fluidPage(theme = "bootstrap.css",
+#theme = "bootstrap.css",
+ui <- fluidPage(
   
   # Application title
   titlePanel("Wine App"),
@@ -44,6 +45,12 @@ ui <- fluidPage(theme = "bootstrap.css",
                              max = 3500,
                              value = c(20,100)),
                  
+                 sliderInput("qualityInput",
+                             "Quality",
+                             min = 0,
+                             max = 100,
+                             value = c(70,100)),
+                 
                  selectInput("countryInput", "Country",
                                     choices = list,
                                     selected = "Argentina"),
@@ -55,7 +62,7 @@ ui <- fluidPage(theme = "bootstrap.css",
     ),
     
     # Show a plot of the generated distribution
-    mainPanel(plotOutput("coolplot"),plotOutput("test"),plotOutput("mymap"),dataTableOutput("wineList"))
+    mainPanel(plotOutput("mymap"),plotOutput("coolplot"), DT::dataTableOutput("wineList"))
   )
 )
 
@@ -65,13 +72,18 @@ server <- function(input, output) {
   
   output$mymap <- renderPlot({
     
+    highlighted <- subset(world, region == input$countryInput)
+    
     ggplot(w_geo) +
        geom_polygon(aes(x=long, y = lat, group = group, fill = count)) + 
        guides(fill = FALSE) + 
        theme_minimal() +
        scale_fill_gradient(low = "misty rose",high = "violetred4", name= "Numbers of \nEntries") + 
        xlab("Longitude") + 
-       ylab("Latitude")
+       ylab("Latitude") +
+        geom_polygon(data = highlighted, aes(x = long, y = lat,group = group), fill = NA, colour = "black")
+      
+      
       
     
   })
@@ -81,9 +93,11 @@ server <- function(input, output) {
     filtered <-
       wine %>%
       filter(country == input$countryInput &
+            quality >= input$qualityInput[1] &
+              quality <= input$qualityInput[2] &
              price >= input$priceInput[1] &
              price <= input$priceInput[2] &
-             variety == input$varietyInput) 
+             variety == input$varietyInput ) 
     
     #ggplot(filtered, aes_string(x = "year",input$yInput)) +
       #geom_histogram(aes_string(colour = "country")) + 
@@ -104,9 +118,11 @@ server <- function(input, output) {
     filtered <-
       wine %>%
       filter(country == input$countryInput &
+               quality >= input$qualityInput[1] &
+               quality <= input$qualityInput[2] &
                price >= input$priceInput[1] &
                price <= input$priceInput[2] &
-               variety == input$varietyInput) 
+               variety == input$varietyInput ) 
   
     ggplot(filtered, aes(quality,price)) +
       geom_point(colour = "violetred4") +
@@ -115,6 +131,15 @@ server <- function(input, output) {
       ggtitle("How much might you spend for quality?") +
       theme_minimal()
 })
+  
+  output$wineList <- DT::renderDataTable({
+    wine %>% filter(country == input$countryInput &
+                      quality >= input$qualityInput[1] &
+                      quality <= input$qualityInput[2] &
+                      price >= input$priceInput[1] &
+                      price <= input$priceInput[2] &
+                      variety == input$varietyInput ) 
+  })
     
 }
 
