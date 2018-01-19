@@ -9,11 +9,22 @@
 
 library(shiny)
 library(tidyverse)
-library(gridExtra)
+library(leaflet)
 
 wine <- read_csv("data/winemag-data-130k-v2.csv")
 wine <- subset(wine, select = -X1 )
+world <- map_data("world")
 names(wine)[4] <- "quality"
+
+w_count <- wine %>%
+  group_by(country) %>% 
+  mutate(count = n()) %>% # count the # of entries in each country
+  select(country, count)
+
+w_count <- unique(w_count)
+names(w_count)[1] <- "region"
+
+w_geo <- left_join(world,w_count)
 
 list <- sort(unique(wine$country))
 list2 <- sort(unique(wine$variety))
@@ -44,13 +55,26 @@ ui <- fluidPage(theme = "bootstrap.css",
     ),
     
     # Show a plot of the generated distribution
-    mainPanel(plotOutput("coolplot")
-    )
+    mainPanel(plotOutput("coolplot"),plotOutput("test"),plotOutput("mymap"),dataTableOutput("wineList"))
   )
 )
 
 # Define server logic required to draw a histogram
 server <- function(input, output) {
+
+  
+  output$mymap <- renderPlot({
+    
+    ggplot(w_geo) +
+       geom_polygon(aes(x=long, y = lat, group = group, fill = count)) + 
+       guides(fill = FALSE) + 
+       theme_minimal() +
+       scale_fill_gradient(low = "misty rose",high = "violetred4", name= "Numbers of \nEntries") + 
+       xlab("Longitude") + 
+       ylab("Latitude")
+      
+    
+  })
   
   output$coolplot <- renderPlot({
     
@@ -65,6 +89,7 @@ server <- function(input, output) {
       #geom_histogram(aes_string(colour = "country")) + 
       #ggtitle(input$titleInput) + 
       #xlab("Year") 
+    
     ggplot(filtered, aes(quality,price)) +
       geom_point(colour = "violetred4") +
       xlab("Quality") + 
@@ -74,6 +99,23 @@ server <- function(input, output) {
 
   })
   
+  output$test <- renderPlot({
+    
+    filtered <-
+      wine %>%
+      filter(country == input$countryInput &
+               price >= input$priceInput[1] &
+               price <= input$priceInput[2] &
+               variety == input$varietyInput) 
+  
+    ggplot(filtered, aes(quality,price)) +
+      geom_point(colour = "violetred4") +
+      xlab("Quality") + 
+      ylab("Price") + 
+      ggtitle("How much might you spend for quality?") +
+      theme_minimal()
+})
+    
 }
 
 # Run the application 

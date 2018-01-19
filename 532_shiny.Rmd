@@ -13,7 +13,7 @@ knitr::opts_chunk$set(echo = TRUE)
 library(tidyverse)
 ```
 
-```{r}
+```{r, message=FALSE}
 wine <- read_csv("winemag-data-130k-v2.csv")
 wine <- subset(wine, select = -X1 )
 names(wine)[4] <- "quality"
@@ -25,11 +25,13 @@ names(wine)[4] <- "quality"
 
 ```{r}
 # join the two tables here to create a map 
+world <- map_data("world")
 highlighted <- subset(world, region == "Canada")
 
 #names(wine)[1] <- "region"
 
-world <- map_data("world")
+
+
 
 #test <- left_join(world,wine)
 
