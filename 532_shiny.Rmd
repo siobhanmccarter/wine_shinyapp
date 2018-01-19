@@ -45,6 +45,10 @@ names(w_count)[1] <- "region"
 
 test <- left_join(world,w_count)
 ```
+```{r}
+highlighted <- world %>% 
+  filter(region == "Canada" & variety == "Chardonnay")
+```
 
 ```{r}
 (map <- ggplot(test) +

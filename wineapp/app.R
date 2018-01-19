@@ -82,9 +82,6 @@ server <- function(input, output) {
        xlab("Longitude") + 
        ylab("Latitude") +
         geom_polygon(data = highlighted, aes(x = long, y = lat,group = group), fill = NA, colour = "black")
-      
-      
-      
     
   })
   
@@ -122,7 +119,7 @@ server <- function(input, output) {
                quality <= input$qualityInput[2] &
                price >= input$priceInput[1] &
                price <= input$priceInput[2] &
-               variety == input$varietyInput ) 
+               variety == input$varietyInput) 
   
     ggplot(filtered, aes(quality,price)) +
       geom_point(colour = "violetred4") +
@@ -133,12 +130,17 @@ server <- function(input, output) {
 })
   
   output$wineList <- DT::renderDataTable({
-    wine %>% filter(country == input$countryInput &
+    DT::datatable(wine %>% filter(country == input$countryInput &
                       quality >= input$qualityInput[1] &
                       quality <= input$qualityInput[2] &
                       price >= input$priceInput[1] &
                       price <= input$priceInput[2] &
-                      variety == input$varietyInput ) 
+                      variety == input$varietyInput ) %>% 
+              select(country, description, designation, quality, price, province),
+    options = list(
+      pageLength = 5, autoWidth = TRUE
+    ))
+    
   })
     
 }
