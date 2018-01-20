@@ -1,0 +1,12 @@
+name: wineapp
+title: wineapp
+username:
+account: siobhanmccarter
+server: shinyapps.io
+hostUrl: https://api.shinyapps.io/v1
+appId: 258786
+bundleId: 1184816
+url: https://siobhanmccarter.shinyapps.io/wineapp/
+when: 1516484171.11808
+asMultiple: FALSE
+asStatic: FALSE

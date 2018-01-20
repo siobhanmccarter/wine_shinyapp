@@ -11,6 +11,7 @@ library(shiny)
 library(tidyverse)
 library(DT)
 library(maps)
+library(shinythemes)
 
 wine <- read_csv("data/winemag-data-130k-v2.csv")
 wine <- subset(wine, select = -X1 ) %>% 
@@ -37,14 +38,14 @@ w_geo <- left_join(world,w_count)
 list <- sort(unique(wine$country))
 list2 <- sort(unique(wine$variety))
 #theme = "bootstrap.css",
-ui <- fluidPage(theme = "bootstrap.css",
+ui <- fluidPage(theme = shinytheme("yeti"),
   
   # Application title
-  headerPanel("Making Pour Decisions"),
+ titlePanel("Making Pour Decisions"),
   
   # Sidebar with a slider input for number of bins 
   sidebarLayout(
-    wellPanel("Your Selections",
+    sidebarPanel("Your Selections",
                  selectInput("countryInput", "Country",
                              choices = list,
                              selected = "Argentina"),
@@ -67,7 +68,7 @@ ui <- fluidPage(theme = "bootstrap.css",
                  
     ),
     
-    # Show a plot of the generated distribution
+    # Show the main panel with two tabs - first with a graph and 
     mainPanel(
       tabsetPanel(
         tabPanel("Location",plotOutput("mymap"), dataTableOutput("wineList")),
