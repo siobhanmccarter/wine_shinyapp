@@ -16,6 +16,8 @@ wine <- subset(wine, select = -X1 ) %>%
   filter(is.na(country) == FALSE) %>% 
   filter(is.na(variety) == FALSE) %>% 
   filter(is.na(price) == FALSE)
+
+wine$country[wine$country == "US"] <- "USA"
   
 world <- map_data("world")
 names(wine)[4] <- "quality"
@@ -28,7 +30,7 @@ w_count <- wine %>%
 
 w_count <- unique(w_count)
 names(w_count)[1] <- "region"
-
+w_count$region[w_count$region == "US"] <- "USA"
 w_geo <- left_join(world,w_count)
 
 list <- sort(unique(wine$country))
@@ -116,25 +118,6 @@ server <- function(input, output, session) {
       theme_minimal()
 
   })
-  
-  output$test <- renderPlot({
-    
-    filtered <-
-      wine %>%
-      filter(country == input$countryInput &
-               quality >= input$qualityInput[1] &
-               quality <= input$qualityInput[2] &
-               price >= input$priceInput[1] &
-               price <= input$priceInput[2] &
-               variety == input$varietyInput) 
-  
-    ggplot(filtered, aes(quality,price)) +
-      geom_point(colour = "violetred4") +
-      xlab("Quality") + 
-      ylab("Price") + 
-      ggtitle("How much might you spend for quality?") +
-      theme_minimal()
-})
   
   output$wineList <- renderDataTable({
     DT::datatable(wine %>% filter(country == input$countryInput &
