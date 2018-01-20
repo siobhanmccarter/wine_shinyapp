@@ -10,6 +10,7 @@
 library(shiny)
 library(tidyverse)
 library(DT)
+library(maps)
 
 wine <- read_csv("data/winemag-data-130k-v2.csv")
 wine <- subset(wine, select = -X1 ) %>% 
@@ -90,11 +91,10 @@ server <- function(input, output, session) {
     
     ggplot(w_geo) +
        geom_polygon(aes(x=long, y = lat, group = group, fill = count)) + 
-       guides(fill = FALSE) + 
        theme_light() +
       theme(axis.title.x=element_blank(),
             axis.title.y = element_blank()) +
-       scale_fill_gradient(low = "misty rose",high = "violetred4", name= "Numbers of \nEntries") + 
+      scale_fill_gradient(low = "misty rose",high = "violetred4",guide = "colourbar", name = "Number of \nEntries") + 
       geom_polygon(data = highlighted, aes(x = long, y = lat,group = group), fill = NA, colour = "black")
     
   })
