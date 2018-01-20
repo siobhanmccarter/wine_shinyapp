@@ -9,15 +9,19 @@
 
 library(shiny)
 library(tidyverse)
-library(leaflet)
 library(DT)
 
 wine <- read_csv("data/winemag-data-130k-v2.csv")
-wine <- subset(wine, select = -X1 )
+wine <- subset(wine, select = -X1 ) %>% 
+  filter(is.na(country) == FALSE) %>% 
+  filter(is.na(variety) == FALSE) %>% 
+  filter(is.na(price) == FALSE)
+  
 world <- map_data("world")
 names(wine)[4] <- "quality"
 
-w_count <- wine %>%
+
+w_count <- wine %>% 
   group_by(country) %>% 
   mutate(count = n()) %>% # count the # of entries in each country
   select(country, count)
@@ -30,45 +34,53 @@ w_geo <- left_join(world,w_count)
 list <- sort(unique(wine$country))
 list2 <- sort(unique(wine$variety))
 #theme = "bootstrap.css",
-ui <- fluidPage(
+ui <- fluidPage(theme = "bootstrap.css",
   
   # Application title
-  titlePanel("Wine App"),
+  headerPanel("Making Pour Decisions"),
   
   # Sidebar with a slider input for number of bins 
   sidebarLayout(
-    sidebarPanel("User Inputs",
+    wellPanel("Your Selections",
+                 selectInput("countryInput", "Country",
+                             choices = list,
+                             selected = "Argentina"),
+                 
+                 selectInput("varietyInput", "Variety",
+                             choices = list2,
+                             selected = "Chardonnay"),
                  
                  sliderInput("priceInput",
                              "Price",
                              min = 0,
                              max = 3500,
-                             value = c(20,100)),
+                             value = c(0,100)),
                  
                  sliderInput("qualityInput",
                              "Quality",
-                             min = 0,
+                             min = 80,
                              max = 100,
-                             value = c(70,100)),
-                 
-                 selectInput("countryInput", "Country",
-                                    choices = list,
-                                    selected = "Argentina"),
-                 
-                 selectInput("varietyInput", "Variety",
-                             choices = list2,
-                             selected = "Chardonnay")
+                             value = c(80,100))
                  
     ),
     
     # Show a plot of the generated distribution
-    mainPanel(plotOutput("mymap"),plotOutput("coolplot"), DT::dataTableOutput("wineList"))
+    mainPanel(
+      tabsetPanel(
+        tabPanel("Location",plotOutput("mymap"), dataTableOutput("wineList")),
+        tabPanel("Price vs. Quality",plotOutput("coolplot")))
   )
-)
+))
 
 # Define server logic required to draw a histogram
-server <- function(input, output) {
-
+server <- function(input, output, session) {
+  
+  observe({
+    country <- wine %>% filter(country == input$countryInput)
+    
+    updateSelectInput(session, "varietyInput", choices = unique(country$variety), selected = "Chardonnay")
+    
+  })
   
   output$mymap <- renderPlot({
     
@@ -77,11 +89,11 @@ server <- function(input, output) {
     ggplot(w_geo) +
        geom_polygon(aes(x=long, y = lat, group = group, fill = count)) + 
        guides(fill = FALSE) + 
-       theme_minimal() +
+       theme_light() +
+      theme(axis.title.x=element_blank(),
+            axis.title.y = element_blank()) +
        scale_fill_gradient(low = "misty rose",high = "violetred4", name= "Numbers of \nEntries") + 
-       xlab("Longitude") + 
-       ylab("Latitude") +
-        geom_polygon(data = highlighted, aes(x = long, y = lat,group = group), fill = NA, colour = "black")
+      geom_polygon(data = highlighted, aes(x = long, y = lat,group = group), fill = NA, colour = "black")
     
   })
   
@@ -94,12 +106,7 @@ server <- function(input, output) {
               quality <= input$qualityInput[2] &
              price >= input$priceInput[1] &
              price <= input$priceInput[2] &
-             variety == input$varietyInput ) 
-    
-    #ggplot(filtered, aes_string(x = "year",input$yInput)) +
-      #geom_histogram(aes_string(colour = "country")) + 
-      #ggtitle(input$titleInput) + 
-      #xlab("Year") 
+             variety == input$varietyInput) 
     
     ggplot(filtered, aes(quality,price)) +
       geom_point(colour = "violetred4") +
@@ -129,17 +136,17 @@ server <- function(input, output) {
       theme_minimal()
 })
   
-  output$wineList <- DT::renderDataTable({
+  output$wineList <- renderDataTable({
     DT::datatable(wine %>% filter(country == input$countryInput &
                       quality >= input$qualityInput[1] &
                       quality <= input$qualityInput[2] &
                       price >= input$priceInput[1] &
                       price <= input$priceInput[2] &
-                      variety == input$varietyInput ) %>% 
-              select(country, description, designation, quality, price, province),
+                      variety == input$varietyInput) %>% 
+              select(designation,winery,quality, price, province),
     options = list(
       pageLength = 5, autoWidth = TRUE
-    ))
+    ), rownames = FALSE)
     
   })
     

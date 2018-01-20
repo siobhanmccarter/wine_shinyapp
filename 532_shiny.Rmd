@@ -47,7 +47,9 @@ test <- left_join(world,w_count)
 ```
 ```{r}
 highlighted <- world %>% 
-  filter(region == "Canada" & variety == "Chardonnay")
+  filter(region == "Canada")
+
+max(wine$quality)
 ```
 
 ```{r}
