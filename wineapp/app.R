@@ -20,6 +20,8 @@ wine <- subset(wine, select = -X1 ) %>%
   filter(is.na(price) == FALSE)
 
 wine$country[wine$country == "US"] <- "USA"
+
+wine$country[wine$country == "England"] <- "UK"
   
 world <- map_data("world")
 names(wine)[4] <- "quality"
@@ -56,8 +58,8 @@ ui <- fluidPage(theme = shinytheme("yeti"),
                  
                  sliderInput("priceInput",
                              "Price",
-                             min = 0,
-                             max = 3500,
+                             min = min(wine$price),
+                             max = max(wine$price),
                              value = c(0,100)),
                  
                  sliderInput("qualityInput",
@@ -79,6 +81,7 @@ ui <- fluidPage(theme = shinytheme("yeti"),
 # Define server logic required to draw a histogram
 server <- function(input, output, session) {
   
+  #filter the dropdown selections based on the country
   observe({
     country <- wine %>% filter(country == input$countryInput)
     
