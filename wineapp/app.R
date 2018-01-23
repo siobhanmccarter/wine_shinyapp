@@ -26,20 +26,8 @@ wine$country[wine$country == "England"] <- "UK"
 world <- map_data("world")
 names(wine)[4] <- "quality"
 
-
-w_count <- wine %>% 
-  group_by(country) %>% 
-  mutate(count = n()) %>% # count the # of entries in each country
-  select(country, count)
-
-w_count <- unique(w_count)
-names(w_count)[1] <- "region"
-w_count$region[w_count$region == "US"] <- "USA"
-w_geo <- left_join(world,w_count)
-
 list <- sort(unique(wine$country))
 list2 <- sort(unique(wine$variety))
-#theme = "bootstrap.css",
 ui <- fluidPage(theme = shinytheme("yeti"),
   
   # Application title
@@ -92,6 +80,17 @@ server <- function(input, output, session) {
   output$mymap <- renderPlot({
     
     highlighted <- subset(world, region == input$countryInput)
+    
+    w_count <- wine %>% 
+      filter(variety == input$varietyInput) %>% 
+      group_by(country) %>% 
+      mutate(count = n()) %>% # count the # of entries in each country
+      select(country, count)
+    
+    w_count <- unique(w_count)
+    names(w_count)[1] <- "region"
+    w_count$region[w_count$region == "US"] <- "USA"
+    w_geo <- left_join(world,w_count)
     
     ggplot(w_geo) +
        geom_polygon(aes(x=long, y = lat, group = group, fill = count)) + 
