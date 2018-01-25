@@ -62,7 +62,8 @@ ui <- fluidPage(theme = shinytheme("yeti"),
     mainPanel(
       tabsetPanel(
         tabPanel("Location",plotOutput("mymap"), dataTableOutput("wineList")),
-        tabPanel("Price vs. Quality",plotOutput("coolplot")))
+        tabPanel("Price vs. Quality",plotOutput("coolplot"),
+                 dataTableOutput("averageprice"),textOutput("averagequality")))
   )
 ))
 
@@ -135,7 +136,21 @@ server <- function(input, output, session) {
     ), rownames = FALSE)
     
   })
+  
+  output$averageprice <- renderDataTable({
+    sumtable <- wine %>% filter(country == input$countryInput &
+                                    quality >= input$qualityInput[1] &
+                                    quality <= input$qualityInput[2] &
+                                    price >= input$priceInput[1] &
+                                    price <= input$priceInput[2] &
+                                    variety == input$varietyInput)
     
+    sumdf <- data_frame()
+    sumdf <- cbind(round(mean(sumtable$price),2),round(mean(sumtable$quality),2)) 
+    colnames(sumdf) <- c("Price","Quality")
+    
+    DT::datatable(sumdf)
+  })
 }
 
 # Run the application 
