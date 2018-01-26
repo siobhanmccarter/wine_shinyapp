@@ -50,13 +50,7 @@ ui <- fluidPage(theme = shinytheme("cosmo"),
                              pre = "$",
                              min = min(wine$price),
                              max = max(wine$price),
-                             value = c(0,100)),
-                 
-                 sliderInput("qualityInput",
-                             "Quality",
-                             min = 80,
-                             max = 100,
-                             value = c(80,100))
+                             value = c(0,100))
                  
     ),
     
@@ -72,12 +66,23 @@ ui <- fluidPage(theme = shinytheme("cosmo"),
 # Define server logic required to draw a histogram
 server <- function(input, output, session) {
   
-  #filter the dropdown selections based on the country
+  # filter the dropdown selections based on the country
   observe({
-    country <- wine %>% filter(country == input$countryInput)
+    country <- wine %>% 
+      filter(country == input$countryInput)
     
     updateSelectInput(session, "varietyInput", choices = unique(country$variety), selected = "Chardonnay")
     
+  })
+  
+  # filter the price options based on the quality and variety
+  observe({
+    quality <- wine %>% 
+      filter(variety == input$varietyInput,
+             country == input$countryInput)
+    
+    updateSliderInput(session, "priceInput", 
+                      min = min(quality$price), max = max(quality$price), value = c(min,max))
   })
   
   output$mymap <- renderPlot({
@@ -111,8 +116,6 @@ server <- function(input, output, session) {
     filtered <-
       wine %>%
       filter(country == input$countryInput &
-            quality >= input$qualityInput[1] &
-              quality <= input$qualityInput[2] &
              price >= input$priceInput[1] &
              price <= input$priceInput[2] &
              variety == input$varietyInput) 
@@ -131,8 +134,6 @@ server <- function(input, output, session) {
   
   output$wineList <- renderDataTable({
     DT::datatable(wine %>% filter(country == input$countryInput &
-                      quality >= input$qualityInput[1] &
-                      quality <= input$qualityInput[2] &
                       price >= input$priceInput[1] &
                       price <= input$priceInput[2] &
                       variety == input$varietyInput) %>% 
@@ -146,8 +147,6 @@ server <- function(input, output, session) {
   
   output$averageprice <- renderTable({
     sumtable <- wine %>% filter(country == input$countryInput &
-                                    quality >= input$qualityInput[1] &
-                                    quality <= input$qualityInput[2] &
                                     price >= input$priceInput[1] &
                                     price <= input$priceInput[2] &
                                     variety == input$varietyInput)
@@ -161,8 +160,6 @@ server <- function(input, output, session) {
   
   output$wineList2 <- renderDataTable({
     DT::datatable(wine %>% filter(country == input$countryInput &
-                                    quality >= input$qualityInput[1] &
-                                    quality <= input$qualityInput[2] &
                                     price >= input$priceInput[1] &
                                     price <= input$priceInput[2] &
                                     variety == input$varietyInput) %>% 
