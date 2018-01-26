@@ -29,14 +29,14 @@ names(wine)[4] <- "quality"
 
 list <- sort(unique(wine$country))
 list2 <- sort(unique(wine$variety))
-ui <- fluidPage(theme = shinytheme("yeti"),
+ui <- fluidPage(theme = shinytheme("cosmo"),
   
   # Application title
  titlePanel("Making Pour Decisions"),
   
   # Sidebar with 4 inputs: 2 sliders and 2 dropdown menus 
   sidebarLayout(
-    sidebarPanel("Your Selections",
+    sidebarPanel("Choose your selections!",
                  selectInput("countryInput", "Country",
                              choices = list,
                              selected = "Argentina"),
@@ -64,7 +64,7 @@ ui <- fluidPage(theme = shinytheme("yeti"),
       tabsetPanel(
         tabPanel("Location",plotOutput("mymap"), dataTableOutput("wineList")),
         tabPanel("Price vs. Quality",plotlyOutput("coolplot"),
-                 dataTableOutput("averageprice"),textOutput("averagequality")))
+                 tableOutput("averageprice"), dataTableOutput("wineList2")))
   )
 ))
 
@@ -99,9 +99,10 @@ server <- function(input, output, session) {
        theme_light() +
       theme(axis.title.x=element_blank(),
             axis.title.y = element_blank()) +
-      scale_fill_gradient(low = "misty rose",high = "violetred4",guide = "colourbar", name = "Number of \nEntries") + 
+      scale_fill_gradient(low = "misty rose",high = "violetred4",
+                          guide = "colourbar", name = "Number of \nWines") + 
       geom_polygon(data = highlighted, aes(x = long, y = lat,group = group), fill = NA, colour = "black")
-    
+
   })
   
   output$coolplot <- renderPlotly({
@@ -134,13 +135,14 @@ server <- function(input, output, session) {
                       price >= input$priceInput[1] &
                       price <= input$priceInput[2] &
                       variety == input$varietyInput) %>% 
-              select(designation,winery,quality, price, province),
+              select(designation,winery,quality, price) %>% 
+                arrange(desc(quality)),
     options = list(
       pageLength = 5, autoWidth = TRUE
     ), rownames = FALSE)
   })
   
-  output$averageprice <- renderDataTable({
+  output$averageprice <- renderTable({
     sumtable <- wine %>% filter(country == input$countryInput &
                                     quality >= input$qualityInput[1] &
                                     quality <= input$qualityInput[2] &
@@ -150,9 +152,23 @@ server <- function(input, output, session) {
     
     sumdf <- data_frame()
     sumdf <- cbind(round(mean(sumtable$price),2),round(mean(sumtable$quality),2)) 
-    colnames(sumdf) <- c("Price","Quality")
+    colnames(sumdf) <- c("Average Price","Average Quality")
     
-    DT::datatable(sumdf)
+    sumdf
+  })
+  
+  output$wineList2 <- renderDataTable({
+    DT::datatable(wine %>% filter(country == input$countryInput &
+                                    quality >= input$qualityInput[1] &
+                                    quality <= input$qualityInput[2] &
+                                    price >= input$priceInput[1] &
+                                    price <= input$priceInput[2] &
+                                    variety == input$varietyInput) %>% 
+                    select(designation,winery,quality, price) %>% 
+                    arrange(desc(quality)),
+                  options = list(
+                    pageLength = 5, autoWidth = TRUE
+                  ), rownames = FALSE)
   })
 }
 
