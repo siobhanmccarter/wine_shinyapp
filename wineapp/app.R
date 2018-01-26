@@ -47,6 +47,7 @@ ui <- fluidPage(theme = shinytheme("cosmo"),
                  
                  sliderInput("priceInput",
                              "Price",
+                             pre = "$",
                              min = min(wine$price),
                              max = max(wine$price),
                              value = c(0,100)),
@@ -137,6 +138,7 @@ server <- function(input, output, session) {
                       variety == input$varietyInput) %>% 
               select(designation,winery,quality, price) %>% 
                 arrange(desc(quality)),
+              colnames = c("Designation","Winery","Quality","Price ($)"),
     options = list(
       pageLength = 5, autoWidth = TRUE
     ), rownames = FALSE)
@@ -166,6 +168,7 @@ server <- function(input, output, session) {
                                     variety == input$varietyInput) %>% 
                     select(designation,winery,quality, price) %>% 
                     arrange(desc(quality)),
+                  colnames = c("Designation","Winery","Quality","Price ($)"),
                   options = list(
                     pageLength = 5, autoWidth = TRUE
                   ), rownames = FALSE)
