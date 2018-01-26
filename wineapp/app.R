@@ -12,6 +12,7 @@ library(tidyverse)
 library(DT)
 library(maps)
 library(shinythemes)
+library(plotly)
 
 wine <- read_csv("data/winemag-data-130k-v2.csv")
 wine <- subset(wine, select = -X1 ) %>% 
@@ -33,7 +34,7 @@ ui <- fluidPage(theme = shinytheme("yeti"),
   # Application title
  titlePanel("Making Pour Decisions"),
   
-  # Sidebar with a slider input for number of bins 
+  # Sidebar with 4 inputs: 2 sliders and 2 dropdown menus 
   sidebarLayout(
     sidebarPanel("Your Selections",
                  selectInput("countryInput", "Country",
@@ -62,7 +63,7 @@ ui <- fluidPage(theme = shinytheme("yeti"),
     mainPanel(
       tabsetPanel(
         tabPanel("Location",plotOutput("mymap"), dataTableOutput("wineList")),
-        tabPanel("Price vs. Quality",plotOutput("coolplot"),
+        tabPanel("Price vs. Quality",plotlyOutput("coolplot"),
                  dataTableOutput("averageprice"),textOutput("averagequality")))
   )
 ))
@@ -103,7 +104,7 @@ server <- function(input, output, session) {
     
   })
   
-  output$coolplot <- renderPlot({
+  output$coolplot <- renderPlotly({
     
     filtered <-
       wine %>%
@@ -114,12 +115,15 @@ server <- function(input, output, session) {
              price <= input$priceInput[2] &
              variety == input$varietyInput) 
     
-    ggplot(filtered, aes(quality,price)) +
-      geom_point(colour = "violetred4") +
+    p <- ggplot(filtered, aes(quality,price)) +
+      geom_jitter(colour = "violetred4", aes(text = sprintf("Quality: %s<br>Price: $%s<br>Winery: %s",
+                                            quality, price, winery))) +
       xlab("Quality") + 
       ylab("Price") + 
       ggtitle("How much might you spend for quality?") +
       theme_minimal()
+    
+    ggplotly(p, tooltip = "text")
 
   })
   
@@ -134,7 +138,6 @@ server <- function(input, output, session) {
     options = list(
       pageLength = 5, autoWidth = TRUE
     ), rownames = FALSE)
-    
   })
   
   output$averageprice <- renderDataTable({
