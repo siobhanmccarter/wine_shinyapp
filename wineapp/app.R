@@ -13,6 +13,7 @@ library(DT)
 library(maps)
 library(shinythemes)
 library(plotly)
+library(devtools)
 
 wine <- read_csv("data/winemag-data-130k-v2.csv")
 wine <- subset(wine, select = -X1 ) %>% 
